@@ -4,18 +4,28 @@ A tiny Alpine container with a fully set-up zsh shell, for working with Docker v
 
 Includes oh-my-zsh, zinit plugins and powerlevel10k, all fetched at build time, so the shell starts instantly with no downloads.
 
+Docker Hub: [darco2903/alpine-zsh](https://hub.docker.com/r/darco2903/alpine-zsh)
+
+## Pull
+
+```sh
+docker pull darco2903/alpine-zsh
+```
+
+Images for `linux/amd64` and `linux/arm64` are published to Docker Hub by GitHub Actions: `latest` from `main`, and `1.2.3` / `1.2` / `1` from `v1.2.3` tags.
+
 ## Build
 
 ```sh
-docker build -t alpine-zsh .
+docker build -t darco2903/alpine-zsh .
 ```
 
-Dotfiles are taken from `build/` (`.zshrc`, `.zsh_aliases`, `.p10k.zsh`). Edit them and rebuild to customize the shell.
+Dotfiles are taken from `build/` (`.zshrc`, `.zsh_aliases`, `.p10k.zsh`). Edit them and rebuild to customize the shell; the local build replaces the pulled image under the same name.
 
 ## Run
 
 ```sh
-docker run --rm -it --hostname zsh alpine-zsh
+docker run --rm -it --hostname zsh darco2903/alpine-zsh
 ```
 
 | Flag             | Purpose                       |
@@ -33,7 +43,7 @@ docker run --rm -it --hostname alpine-zsh \
   -v myvolume:/data \
   -v "$PWD":/host \
   -w /data \
-  alpine-zsh
+  darco2903/alpine-zsh
 ```
 
 `-v` creates a named volume when the source is a name (`myvolume`), and a bind mount when it is a path (`/abs/path` or `./rel`).
@@ -41,7 +51,7 @@ docker run --rm -it --hostname alpine-zsh \
 ### Copy between volumes
 
 ```sh
-docker run --rm -it -v oldvol:/from -v newvol:/to alpine-zsh zsh
+docker run --rm -it -v oldvol:/from -v newvol:/to darco2903/alpine-zsh zsh
 # inside the container:
 cp -a /from/. /to/
 ```
@@ -52,7 +62,7 @@ Add this to your host `~/.zshrc` to open a shell with any mix of volumes and fol
 
 ```sh
 dsh() {
-  local IMAGE="alpine-zsh"
+  local IMAGE="darco2903/alpine-zsh"
   local -a args
   local -A used
   local v src name n i
@@ -67,7 +77,7 @@ dsh() {
     used[$n]=1
     args+=(-v "$src:/vol/$n")
   done
-  docker run --rm -it --hostname "$IMAGE" -v "$PWD":/host "${args[@]}" -w /vol "$IMAGE"
+  docker run --rm -it --hostname alpine-zsh -v "$PWD":/host "${args[@]}" -w /vol "$IMAGE"
 }
 ```
 
