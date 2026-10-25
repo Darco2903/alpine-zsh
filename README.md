@@ -52,14 +52,20 @@ Add this to your host `~/.zshrc` to open a shell with any mix of volumes and fol
 
 ```sh
 dsh() {
-  local args=()
   local IMAGE="alpine-zsh"
+  local -a args
+  local -A used
+  local v src name n i
   for v in "$@"; do
-    if [[ $v == */* || $v == .* ]]; then
-      args+=(-v "${v:A}:/vol/${v:A:t}")   # bind: absolute path, named by folder
+    if [[ -e $v || $v == */* || $v == .* ]]; then
+      src=${v:A} name=${v:A:t}   # bind: existing or path-like, named by folder
     else
-      args+=(-v "$v:/vol/$v")              # named volume
+      src=$v name=$v             # named volume
     fi
+    n=$name
+    for (( i = 2; ${+used[$n]}; i++ )); do n=$name-$i; done   # data, data-2, ...
+    used[$n]=1
+    args+=(-v "$src:/vol/$n")
   done
   docker run --rm -it --hostname "$IMAGE" -v "$PWD":/host "${args[@]}" -w /vol "$IMAGE"
 }
@@ -69,3 +75,10 @@ dsh() {
 dsh myvolume ~/Downloads ./backup
 # → /vol/myvolume, /vol/Downloads, /vol/backup, plus the current folder at /host
 ```
+
+- An argument is mounted as a folder if it exists on disk or looks like a path (contains `/` or starts with `.`), otherwise as a named volume. If a local folder and a volume share a name, the folder wins; run `dsh` from another directory to get the volume.
+- Mounts with the same name get a suffix: `dsh a/data b/data` gives `/vol/data` and `/vol/data-2`.
+
+## Notes
+
+- The shell runs as root, so files it creates in bind mounts are owned by root on Linux hosts. Running with `--user` isn't supported, because the shell config lives in `/root`.
